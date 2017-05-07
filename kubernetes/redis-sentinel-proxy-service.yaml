@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kuberdbs-redis
+  labels:
+    app: redis-sentinel-proxy
+spec:
+  ports:
+  - port: 9999
+    name: redis-sentinel-proxy
+  selector:
+    app: redis-sentinel-proxy
