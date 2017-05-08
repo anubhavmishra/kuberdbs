@@ -8,9 +8,10 @@ import (
 )
 
 const (
-	portFlag      = "port"
-	version       = "0.0.1"
-	redisAddrFlag = "redis-addr"
+	portFlag              = "port"
+	version               = "0.0.1"
+	redisAddrFlag         = "redis-addr"
+	redisAuthPasswordFlag = "redis-auth-password"
 
 	defaultPort      = 8080
 	defaultRedisAddr = "localhost:6379"
@@ -46,6 +47,10 @@ func configureCli(app *cli.App) {
 			Value: defaultRedisAddr,
 			Usage: "Redis server address",
 		},
+		cli.StringFlag{
+			Name:  fmt.Sprintf("%s", redisAuthPasswordFlag),
+			Usage: "Redis authentication password",
+		},
 	}
 	cli.AppHelpTemplate = `{{.Name}} - {{.Usage}}
 
@@ -62,6 +67,7 @@ func validateConfig(c *cli.Context) (*ServerConfig, error) {
 	// set defaults for non-required flags if not specified
 	var port = defaultPort
 	var redisAddr = defaultRedisAddr
+	var redisAuthPassword = os.Getenv("REDIS_PASSWORD")
 
 	if c.IsSet(portFlag) {
 		port = c.Int(portFlag)
@@ -69,9 +75,13 @@ func validateConfig(c *cli.Context) (*ServerConfig, error) {
 	if c.IsSet(redisAddrFlag) {
 		redisAddr = c.String(redisAddrFlag)
 	}
+	if c.IsSet(redisAuthPasswordFlag) {
+		redisAuthPassword = c.String(redisAuthPasswordFlag)
+	}
 
 	return &ServerConfig{
-		port:      port,
-		redisAddr: redisAddr,
+		port:              port,
+		redisAddr:         redisAddr,
+		redisAuthPassword: redisAuthPassword,
 	}, nil
 }
