@@ -6,8 +6,9 @@ metadata:
     app: kuberdbs
 spec:
   ports:
-  - port: 8080
+  - port: 80
     name: kuberdbs
+    targetPort: 8080
   selector:
     app: kuberdbs
   type: LoadBalancer
