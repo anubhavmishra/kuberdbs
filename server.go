@@ -140,7 +140,7 @@ func (s *Server) mysql(c *gin.Context) {
 		return
 	}
 
-	mysqlURL := fmt.Sprintf("mysql://%s:%s@%s/%s", s.mysqlUsername, s.mysqlPassword, s.mysqlAddr, databaseName)
+	mysqlURL := fmt.Sprintf("mysql://%s:%s@%s/%s", databaseUsername, databasePassword, s.mysqlAddr, databaseName)
 
 	c.String(http.StatusOK, fmt.Sprintf("DATABASE_URL=%s", mysqlURL))
 }
