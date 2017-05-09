@@ -28,12 +28,18 @@ type Server struct {
 	redisConn         redis.Conn
 	redisAddr         string
 	redisAuthPassword string
+	mysqlAddr         string
+	mysqlUsername     string
+	mysqlPassword     string
 }
 
 type ServerConfig struct {
 	port              int
 	redisAddr         string
 	redisAuthPassword string
+	mysqlAddr         string
+	mysqlUsername     string
+	mysqlPassword     string
 }
 
 func NewServer(config *ServerConfig) *Server {
@@ -53,6 +59,9 @@ func NewServer(config *ServerConfig) *Server {
 		redisConn:         redisConn,
 		redisAddr:         config.redisAddr,
 		redisAuthPassword: config.redisAuthPassword,
+		mysqlAddr:         config.mysqlAddr,
+		mysqlUsername:     config.mysqlUsername,
+		mysqlPassword:     config.mysqlPassword,
 	}
 }
 
@@ -102,10 +111,10 @@ func getDBNumber(max int, min int) int {
 }
 
 func (s *Server) mysql(c *gin.Context) {
-	databaseURL := "localhost:3306"
-	db, err := sql.Open("mysql")
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/", s.mysqlUsername, s.mysqlPassword, s.mysqlAddr))
 	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+		fmt.Errorf("error opening mysql connection on %s: %v", s.mysqlAddr, err)
+		c.Error(err)
 	}
 	defer db.Close()
 
@@ -115,7 +124,8 @@ func (s *Server) mysql(c *gin.Context) {
 	// create a new database
 	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", databaseName))
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		fmt.Errorf("error create mysql database: %v", err)
+		c.Error(err)
 		return
 	}
 
@@ -124,11 +134,12 @@ func (s *Server) mysql(c *gin.Context) {
 	databasePassword := randomdata.RandStringRunes(10)
 	_, err = db.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s' IDENTIFIED BY '%s'", databaseName, databaseUsername, "%", databasePassword))
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		fmt.Errorf("error creating mysql user and granting permissions: %v", err)
+		c.Error(err)
 		return
 	}
 
-	mysqlURL := fmt.Sprintf("mysql://%s:%s@%s/%s", databaseUsername, databasePassword, databaseURL, databaseName)
+	mysqlURL := fmt.Sprintf("mysql://%s:%s@%s/%s", s.mysqlUsername, s.mysqlPassword, s.mysqlAddr, databaseName)
 
 	c.String(http.StatusOK, fmt.Sprintf("DATABASE_URL=%s", mysqlURL))
 }

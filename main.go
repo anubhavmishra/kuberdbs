@@ -12,9 +12,14 @@ const (
 	version               = "0.0.1"
 	redisAddrFlag         = "redis-addr"
 	redisAuthPasswordFlag = "redis-auth-password"
+	mysqlAddrFlag         = "mysql-addr"
+	mysqlUsernameFlag     = "mysql-username"
+	mysqlPasswordFlag     = "mysql-password"
 
-	defaultPort      = 8080
-	defaultRedisAddr = "localhost:6379"
+	defaultPort          = 8080
+	defaultRedisAddr     = "localhost:6379"
+	defaultMysqlAddr     = "localhost:3306"
+	defaultMysqlUsername = "root"
 )
 
 func main() {
@@ -51,6 +56,20 @@ func configureCli(app *cli.App) {
 			Name:  fmt.Sprintf("%s", redisAuthPasswordFlag),
 			Usage: "Redis authentication password",
 		},
+		cli.StringFlag{
+			Name:  fmt.Sprintf("%s", mysqlAddrFlag),
+			Value: defaultMysqlAddr,
+			Usage: "Mysql server address",
+		},
+		cli.StringFlag{
+			Name:  fmt.Sprintf("%s", mysqlUsernameFlag),
+			Value: defaultMysqlUsername,
+			Usage: "Mysql username",
+		},
+		cli.StringFlag{
+			Name:  fmt.Sprintf("%s", mysqlPasswordFlag),
+			Usage: "Mysql password",
+		},
 	}
 	cli.AppHelpTemplate = `{{.Name}} - {{.Usage}}
 
@@ -68,6 +87,9 @@ func validateConfig(c *cli.Context) (*ServerConfig, error) {
 	var port = defaultPort
 	var redisAddr = defaultRedisAddr
 	var redisAuthPassword = os.Getenv("REDIS_PASSWORD")
+	var mysqlAddr = defaultMysqlAddr
+	var mysqlUsername = defaultMysqlUsername
+	var mysqlPassword = os.Getenv("MYSQL_PASSWORD")
 
 	if c.IsSet(portFlag) {
 		port = c.Int(portFlag)
@@ -78,10 +100,22 @@ func validateConfig(c *cli.Context) (*ServerConfig, error) {
 	if c.IsSet(redisAuthPasswordFlag) {
 		redisAuthPassword = c.String(redisAuthPasswordFlag)
 	}
+	if c.IsSet(mysqlAddrFlag) {
+		mysqlAddr = c.String(mysqlAddrFlag)
+	}
+	if c.IsSet(mysqlUsernameFlag) {
+		mysqlUsername = c.String(mysqlUsernameFlag)
+	}
+	if c.IsSet(mysqlPasswordFlag) {
+		mysqlPassword = c.String(mysqlPasswordFlag)
+	}
 
 	return &ServerConfig{
 		port:              port,
 		redisAddr:         redisAddr,
 		redisAuthPassword: redisAuthPassword,
+		mysqlAddr:         mysqlAddr,
+		mysqlUsername:     mysqlUsername,
+		mysqlPassword:     mysqlPassword,
 	}, nil
 }
