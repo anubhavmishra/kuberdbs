@@ -10,6 +10,6 @@ spec:
     name: kuberdbs
   selector:
     app: kuberdbs
-  Type: LoadBalancer
+  type: LoadBalancer
 
 
