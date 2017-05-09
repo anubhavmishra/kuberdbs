@@ -111,6 +111,7 @@ func getDBNumber(max int, min int) int {
 }
 
 func (s *Server) mysql(c *gin.Context) {
+	// migrate this to use server
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/", s.mysqlUsername, s.mysqlPassword, s.mysqlAddr))
 	if err != nil {
 		fmt.Errorf("error opening mysql connection on %s: %v", s.mysqlAddr, err)
