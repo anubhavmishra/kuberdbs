@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"math/rand"
 	"time"
@@ -9,8 +10,10 @@ import (
 
 	"net/http"
 
+	randomdata "github.com/Pallinder/go-randomdata"
 	"github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/urfave/cli"
 )
 
@@ -57,6 +60,7 @@ func (s *Server) Start() error {
 	s.engine.Use(gin.Recovery(), gin.Logger())
 	s.engine.GET("/", s.index)
 	s.engine.GET("/redis", s.redis)
+	s.engine.GET("/mysql", s.mysql)
 	log.Printf("kuberdbs started - listening on port %v", s.port)
 	if err := s.engine.Run(fmt.Sprintf(":%v", s.port)); err != nil {
 		return cli.NewExitError(err.Error(), 1)
@@ -95,6 +99,38 @@ func (s *Server) redis(c *gin.Context) {
 func getDBNumber(max int, min int) int {
 	rand.Seed(time.Now().Unix())
 	return rand.Intn(max-min) + min
+}
+
+func (s *Server) mysql(c *gin.Context) {
+	databaseURL := "localhost:3306"
+	db, err := sql.Open("mysql")
+	if err != nil {
+		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+	}
+	defer db.Close()
+
+	// generate random name
+	databaseName := randomdata.SillyName()
+
+	// create a new database
+	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %s", databaseName))
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+		return
+	}
+
+	// generate a new user
+	databaseUsername := randomdata.FirstName(5)
+	databasePassword := randomdata.RandStringRunes(10)
+	_, err = db.Exec(fmt.Sprintf("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s' IDENTIFIED BY '%s'", databaseName, databaseUsername, "%", databasePassword))
+	if err != nil {
+		panic(err.Error()) // proper error handling instead of panic in your app
+		return
+	}
+
+	mysqlURL := fmt.Sprintf("mysql://%s:%s@%s/%s", databaseUsername, databasePassword, databaseURL, databaseName)
+
+	c.String(http.StatusOK, fmt.Sprintf("DATABASE_URL=%s", mysqlURL))
 }
 
 func (s *Server) index(c *gin.Context) {
