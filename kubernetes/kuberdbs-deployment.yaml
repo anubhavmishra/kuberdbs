@@ -19,9 +19,9 @@ spec:
                 fieldPath: metadata.namespace
         args:
           - "--redis-addr"
-          - "redis-sentinel-proxy.redis:9999"
+          - "redis.redis:6379" # change this to your redis server address
           - "--mysql-addr"
-          - "mysql.mysql:3306"
+          - "mysql.mysql:3306" # change this to your mysql server address
         ports:
         - containerPort: 8080
         env:
