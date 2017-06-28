@@ -52,6 +52,21 @@ func NewServer(config *ServerConfig) *Server {
 		log.Fatalf("error connecting to redis server %s", err)
 	}
 
+	// mysql db connection
+	// Open doesn't open a connection.
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/", config.mysqlUsername, config.mysqlPassword, config.mysqlAddr))
+	if err != nil {
+		log.Fatalf("error opening mysql database on %s: %v", config.mysqlAddr, err)
+	}
+
+	// try making a connection
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("error opening mysql connection on %s: %v", config.mysqlAddr, err)
+	}
+
+	defer db.Close()
+
 	return &Server{
 		port:              config.port,
 		version:           version,
@@ -111,12 +126,11 @@ func getDBNumber(max int, min int) int {
 }
 
 func (s *Server) mysql(c *gin.Context) {
-	// migrate this to use server
 	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/", s.mysqlUsername, s.mysqlPassword, s.mysqlAddr))
 	if err != nil {
-		fmt.Errorf("error opening mysql connection on %s: %v", s.mysqlAddr, err)
-		c.Error(err)
+		log.Fatalf("error opening mysql database on %s: %v", s.mysqlAddr, err)
 	}
+
 	defer db.Close()
 
 	// generate random name
