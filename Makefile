@@ -28,4 +28,4 @@ run: ## Build and run the project
 	go build . && ./kuberdbs
 
 clean:
-	-rm -rf build
+	rm -rf build
